@@ -14,9 +14,12 @@ date: 2022-03-19
 {:toc}
 
 ## Introduction
-Our project idea is inspired by [PaintTransformer](https://github.com/wzmsltw/PaintTransformer) which turns a static image into an oil painting drawing process and [VQGAN + CLIP Art generation](https://github.com/nerdyrodent/VQGAN-CLIP) which turns texts into artwork. We want to combine the idea from both projects and design a model which could give an artistic painting process from the text described. Specifically, we want to reproduce and explain VQGAN+CLIP for text-guided image generation and take it as the input of the PaintTransformer to produce an artwork with paint strokes. 
+Our project idea is inspired by [Paint Transformer](https://github.com/wzmsltw/PaintTransformer) which turns a static image into an oil painting drawing process and [VQGAN + CLIP Art generation](https://github.com/nerdyrodent/VQGAN-CLIP) which turns texts into artwork. We want to combine the idea from both projects and design a model which could give an artistic painting process from the text described. Specifically, we want to reproduce and explain VQGAN+CLIP for text-guided image generation and take it as the input of the Paint Transformer to produce an artwork with paint strokes. 
 
 To clarify, VQGAN + CLIP is actually the combination of two models: VQGAN stands for *Vector Quantized Generative Adversarial Network*, which is a type of GAN that can be used to generate high-resolution images; while CLIP stands for *Contrastive Language-Image Pretraining*, which is a classifier that could pick the most relevant sentence for the image from several options. Unlike other attention GAN, which can also generate images from text, VQGAN + CLIP is more like a student-teacher pair: VQGAN will generate an image, and CLIP will judge whether this image has any relevance to the prompt and tell VQGAN how to optimize. In this blog, we will focus more on the generative portion and take CLIP as a tool for the text-guided art generation process.
+
+
+Paint Transformer is a neural network model which mimicking real human oil painting process given a traget image.
 
 ## Technical Details of Models
 
@@ -178,7 +181,7 @@ During training, the system will first quantize the latent vector, decode it to 
 {: style="text-align: center;"}
 
 ### Paint Transformer
-**Paint transformer** is a novel Computer Vision Algorithm that converts a static picture into an artistic oil painting and shows all the stroke sequences of the painting. The [Demo](#painttransformer) section shows my reimplementing of this algorithm according to their [paper](https://arxiv.org/abs/2108.03798).
+**Paint transformer** is a novel Computer Vision Algorithm that converts a static picture into an artistic oil painting. It can also generates the whole painting process from an empty canvas. The [Demo](#Result) section shows our modification of this algorithm according to the original [paper](https://arxiv.org/abs/2108.03798).
 
 ![VQGAN]({{ '/assets/images/team02/painttransformer.png' | relative_url }})
 {: style="width: 100%; max-width: 100%;"}
@@ -186,7 +189,7 @@ During training, the system will first quantize the latent vector, decode it to 
 {: style="text-align: center;"}
 
 #### Paint Transformer Framework
-The structure of the whole training pipeline is provided in Fig 5. The Paint Transformer contains two parts: Stroke Predictor and Stroke Renderer. For each rendering iteration, the Stroke Predictor will give predictions from the input image I<sub>t</sub>, and pass the result to the stroke renderer. The stroke render will add strokes accordingly from the Canvas images I<sub>c</sub>. The result will be the image I<sub>r</sub>. 
+The structure of the whole painting pipeline is provided in Fig 5. The Paint Transformer contains two parts: Stroke Predictor and Stroke Renderer. For each rendering iteration, the Stroke Predictor will give predictions from the input image I<sub>t</sub>, and pass the result to the stroke renderer. The stroke render will add strokes accordingly from the Canvas images I<sub>c</sub>. The result will be the image I<sub>r</sub>. 
 
 #### Loss function
 Both stroke (direction, dimension, and sequence) and pixel (color) will affect the result. The loss function contains the two factors are presented below:
@@ -300,7 +303,7 @@ old = old.permute(0, 2, 4, 1, 3, 5).contiguous()
 self.old = old.view(self.opt.batch_size, 3, self.patch_size, self.patch_size).contiguous()
 ```
 #### Painting Process
-After training, the whole pipeline can be used for mimicking a real-world painting process. The [Demo](#painttransformer) section illustrates the painting process. The drawer will run *K* iterations to finish the drawing. The value of *K* depends on the input picture dimension and can be derived through the below formula:
+After training, the whole pipeline can be used for mimicking a real-world painting process. The [Demo](#Result) section illustrates the painting process. The drawer will run *K* iterations to finish the drawing. The value of *K* depends on the input picture dimension and can be derived through the below formula:
 
 $$
 K = \text{max}(\text{argmin}_K\{P \times  2^K \geq \text{max}(H,W)\},0)
@@ -421,7 +424,7 @@ After producing the generated image, we further pass the image into the Paint Tr
 
 ![Inference]({{ '/assets/images/team02/rabbit.jpg' | relative_url }})
 {: style="width: 60%; max-width: 60%; display:block; margin-left:auto; margin-right:auto"}
-*Fig 12. Output of PaintTransformer for the picture generated by VQGAN+CLIP*.
+*Fig 12. Output of Paint Transformer for the picture generated by VQGAN+CLIP*.
 {: style="text-align: center;"}
 
 ## Demo
@@ -433,6 +436,7 @@ VQGAN + CLIP demo: [Colab](https://colab.research.google.com/drive/1XUpthtNr0jma
 Paint Transformer demo: [Colab](https://colab.research.google.com/drive/1y58i9oFag4aqDS7OgPgEcW_ZTpxvQWXq?usp=sharing)
 
 ## Spolight Presentation 
+Slides: [Google Docs](https://colab.research.google.com/drive/1y58i9oFag4aqDS7OgPgEcW_ZTpxvQWXq?usp=sharing)
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/aTLi9KGCokE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
