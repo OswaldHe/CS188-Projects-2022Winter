@@ -3,7 +3,7 @@ layout: post
 comments: true
 title: Text Guided Art Generation
 author: Zifan He, Wenjie Mo
-date: 2022-01-25
+date: 2022-03-19
 ---
 
 > Our project mainly works on investigating and innovating a text-guided image generation model and an art painting model and connecting the two models together to create artworks with only text inputs. Some artists have already applied AI/Deep Learning in their art creation (VQGAN-CLIP), while the development of diffusion models and transformers may provide more stable and human-like output. In this project, we will talk about how we utilized VQGAN + CLIP and Paint Transformer for the whole generating pipeline and present Colab demos.
