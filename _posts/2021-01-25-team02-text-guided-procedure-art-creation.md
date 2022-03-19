@@ -229,7 +229,12 @@ According to this loss function, actually any pictures can be used for input and
 Fig 6 showed the mechanism of a Stroke Render which takes a predefined brush prototype and transforms it into expected stroke by applying different coordinates (x,y), height(h), width(w), rotate angle($$\theta$$), and color (r,g,b). The renderer only contains linear transformation, so it is not trainable. 
 
 #### Stroke Predictor
-The goal of Stroke Predictor is to find a set of strokes to draw images from the canvas image I<sub>c</sub> to the target image I<sub>t</sub>. CNNs on I<sub>c</sub> and I<sub>t</sub> gives out feature maps of two images. In the below code snippet, the `self.enc_img` represents the CNN for target image (I<sub>t</sub>) and the `self.enc_canvas` represents the CNN for the canvas (I<sub>c</sub>). The convolutional network encoder implementation is implemented as followed:
+![stroke]({{ '/assets/images/team02/predictor_framework.png' | relative_url }})
+{: style="width: 80%; max-width: 80%; display:block; margin-left:auto; margin-right:auto"}
+*Fig 7. Stroke predictor framework* [2].
+{: style="text-align: center;display:block; margin-left:auto; margin-right:auto"}
+
+Fig 7 illustrates the framework of the Stroke Predictor. The goal of the Stroke Predictor is to predict a set of strokes to draw images from the canvas image I<sub>c</sub> to the target image I<sub>t</sub>. Convolutional neural network on I<sub>c</sub> and I<sub>t</sub> gives out feature maps and positional information of two images, which are used for comparing differences and generating predicted strokes in the encoder. In the below code snippet, the `self.enc_img` represents the CNN for target image (I<sub>t</sub>) and the `self.enc_canvas` represents the convolutional neural network for the canvas (I<sub>c</sub>). The convolutional network encoder implementation is implemented as followed:
 
 ```python
 class Painter(nn.Module):
@@ -280,7 +285,7 @@ class Painter(nn.Module):
         canvas_feat = self.enc_canvas(canvas)
         # More transformation code continues, you could check out our code base
 ```
-Only Stroke Predictor contains trainable parameters. So the training part will only focus on optimizing the Stroke Predictor.
+Only Stroke Predictor contains trainable parameters. So the training part will only focus on optimizing the encoder part of the Stroke Predictor.
 
 #### Dataset Selection
 In the paper, authors used a novel way to train the model with existing datasets. According to framework of this project, the loss function is the comparison between the generated strokes and the original image. Without dependencies on labels, randomly generated images can be used for training. Since there is no limit of generating random images, the dataset can be really large for training more reliable models. The following snippet shows the generation of a random image. The `foreground` and `alpha` serve as a random stroke and pixel generator and assign corresponding value to `old` (which later becomes I<sub>c</sub> and I<sub>t</sub> through further transformation)
@@ -304,10 +309,10 @@ The below algorithm shows the drawing algorithm given an input image.
 
 ![Inference]({{ '/assets/images/team02/inference.png' | relative_url }})
 {: style="width: 60%; max-width: 60%; display:block; margin-left:auto; margin-right:auto"}
-*Fig 7. Drawing process algorithm* [2].
+*Fig 8. Drawing process algorithm* [2].
 {: style="text-align: center;"}
 
-According to Fig 7, starting from the empty canvas, some strokes will be added to the canvas each iteration. Each iteration of painting is based on the last iteration's result and new strokes will be added through Stroke Predictor and Stroke Render.
+According to Fig 8, starting from the empty canvas, some strokes will be added to the canvas each iteration. Each iteration of painting is based on the last iteration's result and new strokes will be added through Stroke Predictor and Stroke Render.
 ## Implementation
 
 ### VQGAN + CLIP
@@ -318,7 +323,7 @@ When training the transformer, we encode the prediction output from the transfor
 
 ![Perform]({{ '/assets/images/team02/transformer_perform.png' | relative_url }})
 {: style="width: 100%; max-width: 100%;"}
-*Fig 8. Image recovery based on 1/8 cropped image*.
+*Fig 9. Image recovery based on 1/8 cropped image*.
 {: style="text-align: center;"}
 
 **Vector quantization:**
@@ -373,16 +378,16 @@ The original approach in the code was the no dataset approach. We reimplemented 
 For each dataset, we trained a Paint Transformer Model for about 3 hours on an RTX 3080 graphics card. Due to different dataset sizes, we could achieve 120 to 220 epochs of training.
 
 ![Loss]({{ '/assets/images/team02/paint_loss.png' | relative_url }}){: style="width: 100%; max-width: 100%;"}
-*Fig 8. Loss curve when we are using Miniplaces dataset for training*.
+*Fig 10. Loss curve when we are using Miniplaces dataset for training*.
 {: style="text-align: center;"}
 
-The loss trend is shown in Fig 8 shows the loss curve during the training process for Miniplaces dataset. Other datasets (including the random dataset) have a similar trend. According to the loss curve, the convergence happens around 80-100 epoches.
+The loss trend is shown in Fig 10 shows the loss curve during the training process for Miniplaces dataset. Other datasets (including the random dataset) have a similar trend. According to the loss curve, the convergence happens around 80-100 epoches.
 
 #### Result:
 Below are oil paintings generated from the original pretained model given in the code repository and three different models trained by us using 120 epochs.
 
 ![Royce]({{ '/assets/images/team02/royce.jpg' | relative_url }}){: style="width: 70%; max-width: 70%;"}
-*Fig 9. Original input image (UCLA Royce Hall)*.
+*Fig 11. Original input image (UCLA Royce Hall)*.
 {: style="text-align: center;"}
 
 | Input      | Output | Drawing Process     |
@@ -392,6 +397,8 @@ Below are oil paintings generated from the original pretained model given in the
 Miniplaces  | ![]({{ '/assets/images/team02/royce_miniplace.jpg' | relative_url }})  | ![]({{ '/assets/images/team02/royce_miniplace.gif' | relative_url }})   |
 Landscape | ![]({{ '/assets/images/team02/royce_landscape.jpg' | relative_url }})  | ![]({{ '/assets/images/team02/royce_landscape.gif' | relative_url }})   |
 
+*Table 1. Paintings outputted from each model*.
+{: style="text-align: center;"}
 
 #### Summary:
 Among all three results, the result from the no-dataset approach actually performed the best. Our implementation and modification of the training code achieve a similar result comparing with the pretained model. Our implementation confirmed the statement in the [paper](https://arxiv.org/abs/2108.03798) that the no-dataset approach can achieve similar performance without extra training time.
@@ -410,18 +417,33 @@ For better visual performance, we will use the pretrained model in `taming-trans
 *Prompt: a painting of a rabbit on the grass*
 {: style="text-align: center;"}
 
-After producing the generated image, we further pass the image into the PaintTransformer to generate the picture with paining strokes:
+After producing the generated image, we further pass the image into the Paint Transformer to generate the picture with paining strokes. The final output given text prompt is displayed in Fig 12.
 
 ![Inference]({{ '/assets/images/team02/rabbit.jpg' | relative_url }})
 {: style="width: 60%; max-width: 60%; display:block; margin-left:auto; margin-right:auto"}
-*Fig 9. Output of PaintTransformer for the picture generated by VQGAN+CLIP*.
+*Fig 12. Output of PaintTransformer for the picture generated by VQGAN+CLIP*.
 {: style="text-align: center;"}
 
 ## Demo
 
-Code and Colab demo links [here](https://drive.google.com/drive/folders/1UaRDP9XtW14AJFQre5-XwW14m9Ia8YNs?usp=sharing)
+Code base: [Google Drive](https://drive.google.com/drive/folders/1UaRDP9XtW14AJFQre5-XwW14m9Ia8YNs?usp=sharing)
+
+VQGAN + CLIP demo: [Colab](https://colab.research.google.com/drive/1XUpthtNr0jmaCxmxizDr3hf87cbw67zp)
+
+Paint Transformer demo: [Colab](https://colab.research.google.com/drive/1y58i9oFag4aqDS7OgPgEcW_ZTpxvQWXq?usp=sharing)
+
+## Spolight Presentation 
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/aTLi9KGCokE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Code Repository and Innovation
+[1] [VQGAN + CLIP Art generation](https://github.com/nerdyrodent/VQGAN-CLIP)
+
+[2] [AttnGAN](https://github.com/taoxugit/AttnGAN)
+
+[3] [PaintTransformer](https://github.com/wzmsltw/PaintTransformer)
+
+For VQGAN + CLIP, we innovated the original training code (use CIFAR-10 dataset) and demo code in Colab. Final demo has both pretrained model and our own model option. For Paint Transformer, we modified the training process to accept outside dataset and wrote demo code in Colab. We did an ayalysis of benefits of their no dataset approach comparing to our Miniplaces approach in this blog.
 
 ## Reference
 [1] Xu, Tao, et al. "Attngan: Fine-grained text to image generation with attentional generative adversarial networks." Proceedings of the IEEE conference on computer vision and pattern recognition. 2018.
@@ -443,12 +465,5 @@ Code and Colab demo links [here](https://drive.google.com/drive/folders/1UaRDP9X
 [9] Miranda Lj. "The Illustrated VQGAN." https://ljvmiranda921.github.io/notebook/2021/08/08/clip-vqgan/#perception
 
 [10] Van Den Oord, Aaron, and Oriol Vinyals. "Neural discrete representation learning." Advances in neural information processing systems 30 (2017).
-
-## Code Repository
-[1] [VQGAN + CLIP Art generation](https://github.com/nerdyrodent/VQGAN-CLIP)
-
-[2] [AttnGAN](https://github.com/taoxugit/AttnGAN)
-
-[3] [PaintTransformer](https://github.com/wzmsltw/PaintTransformer)
 
 ---
