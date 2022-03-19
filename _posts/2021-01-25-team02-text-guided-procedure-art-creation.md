@@ -421,6 +421,8 @@ After producing the generated image, we further pass the image into the PaintTra
 
 Code and Colab demo links [here](https://drive.google.com/drive/folders/1UaRDP9XtW14AJFQre5-XwW14m9Ia8YNs?usp=sharing)
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/aTLi9KGCokE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## Reference
 [1] Xu, Tao, et al. "Attngan: Fine-grained text to image generation with attentional generative adversarial networks." Proceedings of the IEEE conference on computer vision and pattern recognition. 2018.
 
